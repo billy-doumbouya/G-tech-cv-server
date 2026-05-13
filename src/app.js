@@ -8,7 +8,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 
-import connectDB from "./config/db.js";
+import { connectDB } from "./config/db.js";
 import sessionConfig from "./config/session.js";
 import { verifyMailer } from "./config/mailer.js";
 import passport from "./config/passport.js";
@@ -47,12 +47,6 @@ app.use(express.urlencoded({ extended: true, limit: "2mb" }));
 // ── Sanitize MongoDB ──────────────────────────────────────
 app.use(mongoSanitize());
 
-// ── Session ───────────────────────────────────────────────
-app.use(sessionConfig);
-
-// ── Passport (Google OAuth) ───────────────────────────────
-app.use(passport.initialize());
-
 // ── Morgan logger ─────────────────────────────────────────
 app.use(
   morgan(process.env.NODE_ENV === "production" ? "combined" : "dev", {
@@ -86,7 +80,11 @@ const PORT = process.env.PORT || 5000;
 const startServer = async () => {
   await connectDB();
   await verifyMailer();
+  // ── Session ───────────────────────────────────────────────
+  app.use(sessionConfig);
 
+  // ── Passport (Google OAuth) ───────────────────────────────
+  app.use(passport.initialize());
   app.listen(PORT, () => {
     logger.info(`🚀 Serveur G-Tech CV démarré — port ${PORT}`);
     logger.info(`📡 Env : ${process.env.NODE_ENV || "development"}`);

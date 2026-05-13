@@ -32,7 +32,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
-    phone: {
+    phoneNumber: {
       type: String,
       trim: true,
       default: "",
@@ -52,6 +52,10 @@ const userSchema = new mongoose.Schema(
       default: true,
     },
     isVerified: {
+      type: Boolean,
+      default: false,
+    },
+    terms: {
       type: Boolean,
       default: false,
     },
@@ -79,7 +83,7 @@ const userSchema = new mongoose.Schema(
         return ret;
       },
     },
-  }
+  },
 );
 
 // ── Hash password ─────────────────────────────────────────

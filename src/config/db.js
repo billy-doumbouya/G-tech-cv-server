@@ -1,36 +1,24 @@
-import dotenv from "dotenv";
+import dns from "dns";
+import { env } from "./env.js";
+import { logger } from "./logger.js";
 import mongoose from "mongoose";
-import logger from "../utils/logger.js";
 
-dotenv.config();
-// On configure les événements UNE SEULE FOIS, à l'import du module
-mongoose.connection.on("disconnected", () => {
-  logger.warn(
-    "⚠️ MongoDB déconnecté — Mongoose tentera de se reconnecter automatiquement.",
-  );
-});
+dns.setServers(["8.8.8.8", "1.1.1.1"]);
 
-mongoose.connection.on("error", (err) => {
-  logger.error(`❌ Erreur MongoDB : ${err.message}`);
-});
-
-const connectDB = async () => {
+export async function connectDB() {
   try {
-    // Vérification de l'URI pour éviter une erreur obscure
-    if (!process.env.MONGO_URI) {
-      throw new Error("La variable d'environnement MONGO_URI est manquante.");
-    }
-
-    const conn = await mongoose.connect(process.env.MONGO_URI, {
-      serverSelectionTimeoutMS: 5000, // Garde ce timeout, c'est une bonne pratique
-    });
-
-    logger.info(`✅ MongoDB Atlas connecté : ${conn.connection.host}`);
+    await mongoose.connect(env.mongoUri);
+    logger.info("[DB] MongoDB connected");
   } catch (err) {
-    logger.error(`💥 Échec connexion initiale MongoDB Atlas : ${err.message}`);
-    // On quitte le processus car l'app ne peut pas fonctionner sans DB au démarrage
+    logger.error({ err }, "[DB] Connection failed");
     process.exit(1);
   }
-};
 
-export default connectDB;
+  mongoose.connection.on("disconnected", () => {
+    logger.warn("[DB] MongoDB disconnected");
+  });
+
+  mongoose.connection.on("error", (err) => {
+    logger.error({ err }, "[DB] MongoDB error");
+  });
+}
